@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Controle Financeiro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0f12;
+      --surface: #151820;
+      --surface2: #1c2030;
+      --border: #252a3a;
+      --accent: #00e5a0;
+      --accent2: #ff5e7e;
+      --accent3: #ffd166;
+      --text: #e8eaf0;
+      --muted: #6b7280;
+      --radius: 16px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    /* Background effect */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -200px; left: -200px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(0,229,160,0.06) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -200px; right: -200px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(255,94,126,0.06) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      margin-bottom: 2.5rem;
+      animation: fadeDown 0.6s ease both;
+    }
+
+    header h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+
+    header h1 span { color: var(--accent); }
+
+    header p {
+      color: var(--muted);
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+    }
+
+    /* Cards resumo */
+    .resumo {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+
+    .card-resumo {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .card-resumo:hover { transform: translateY(-2px); border-color: #353a50; }
+
+    .card-resumo::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .card-resumo.receita::before { background: var(--accent); }
+    .card-resumo.despesa::before { background: var(--accent2); }
+    .card-resumo.saldo::before { background: var(--accent3); }
+
+    .card-resumo label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .card-resumo .valor {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      font-weight: 700;
+      margin-top: 0.5rem;
+    }
+    .card-resumo.receita .valor { color: var(--accent); }
+    .card-resumo.despesa .valor { color: var(--accent2); }
+    .card-resumo.saldo .valor { color: var(--accent3); }
+
+    /* Grid principal */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1.6fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+    }
+
+    .panel h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .panel h2 .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: inline-block;
+    }
+
+    /* Form */
+    .form-group {
+      margin-bottom: 0.75rem;
+    }
+
+    label.field {
+      display: block;
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 0.35rem;
+    }
+
+    input, select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.85rem;
+      padding: 0.65rem 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus { border-color: var(--accent); }
+    select option { background: var(--surface2); }
+
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+    btn, .btn {
+      display: inline-block;
+      width: 100%;
+      margin-top: 0.5rem;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+      letter-spacing: 0.5px;
+    }
+    .btn:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn-green { background: var(--accent); color: #0d0f12; }
+    .btn-red { background: var(--accent2); color: #fff; }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 2rem; right: 2rem;
+      background: var(--surface2);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 0.75rem 1.25rem;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s;
+      z-index: 999;
+      pointer-events: none;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.error { border-color: var(--accent2); color: var(--accent2); }
+
+    /* Transações */
+    .transacoes-panel {
+      animation: fadeUp 0.6s 0.3s ease both;
+    }
+
+    .transacao-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.85rem 1rem;
+      border-radius: 10px;
+      background: var(--surface2);
+      margin-bottom: 0.5rem;
+      border: 1px solid transparent;
+      transition: border-color 0.2s;
+    }
+    .transacao-item:hover { border-color: var(--border); }
+
+    .transacao-info { flex: 1; }
+    .transacao-desc {
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    .transacao-meta {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 0.2rem;
+    }
+
+    .transacao-valor {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-right: 1rem;
+    }
+    .transacao-valor.receita { color: var(--accent); }
+    .transacao-valor.despesa { color: var(--accent2); }
+
+    .btn-del {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 6px;
+      padding: 0.3rem 0.6rem;
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'DM Mono', monospace;
+    }
+    .btn-del:hover { border-color: var(--accent2); color: var(--accent2); }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.8rem;
+      padding: 2rem;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .tab {
+      padding: 0.4rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: none;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab.active {
+      background: var(--accent);
+      color: #0d0f12;
+      border-color: var(--accent);
+      font-weight: 500;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 700px) {
+      .resumo { grid-template-columns: 1fr; }
+      .grid { grid-template-columns: 1fr; }
+      .row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Controle <span>Financeiro</span></h1>
+    <p>API REST • Node.js + Express + MySQL</p>
+  </header>
+
+  <!-- Resumo -->
+  <div class="resumo">
+    <div class="card-resumo receita">
+      <label>Receitas</label>
+      <div class="valor" id="val-receitas">R$ —</div>
+    </div>
+    <div class="card-resumo despesa">
+      <label>Despesas</label>
+      <div class="valor" id="val-despesas">R$ —</div>
+    </div>
+    <div class="card-resumo saldo">
+      <label>Saldo</label>
+      <div class="valor" id="val-saldo">R$ —</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- Formulários -->
+    <div class="panel">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('transacao')">+ Transação</button>
+        <button class="tab" onclick="switchTab('categoria')">+ Categoria</button>
+      </div>
+
+      <!-- Form Transação -->
+      <div class="tab-content active" id="tab-transacao">
+        <div class="form-group">
+          <label class="field">Descrição</label>
+          <input type="text" id="t-desc" placeholder="Ex: Salário maio" />
+        </div>
+        <div class="row">
+          <div class="form-group">
+            <label class="field">Valor (R$)</label>
+            <input type="number" id="t-valor" placeholder="0.00" step="0.01" min="0"/>
+          </div>
+          <div class="form-group">
+            <label class="field">Data</label>
+            <input type="date" id="t-data" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="form-group">
+            <label class="field">Tipo</label>
+            <select id="t-tipo">
+              <option value="receita">Receita</option>
+              <option value="despesa">Despesa</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="field">Categoria</label>
+            <select id="t-categoria"><option value="">Sem categoria</option></select>
+          </div>
+        </div>
+        <button class="btn btn-green" onclick="criarTransacao()">Registrar transação</button>
+      </div>
+
+      <!-- Form Categoria -->
+      <div class="tab-content" id="tab-categoria">
+        <div class="form-group">
+          <label class="field">Nome da categoria</label>
+          <input type="text" id="c-nome" placeholder="Ex: Alimentação" />
+        </div>
+        <div class="form-group">
+          <label class="field">Tipo</label>
+          <select id="c-tipo">
+            <option value="receita">Receita</option>
+            <option value="despesa">Despesa</option>
+          </select>
+        </div>
+        <button class="btn btn-green" onclick="criarCategoria()">Criar categoria</button>
+      </div>
+    </div>
+
+    <!-- Lista transações -->
+    <div class="panel transacoes-panel">
+      <h2><span class="dot"></span> Transações recentes</h2>
+      <div id="lista-transacoes"><div class="empty">Nenhuma transação ainda.</div></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const API = 'http://localhost:3000';
+
+  // Definir data de hoje no input
+  document.getElementById('t-data').valueAsDate = new Date();
+
+  function showToast(msg, error = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'show' + (error ? ' error' : '');
+    setTimeout(() => t.className = '', 3000);
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach((el, i) => {
+      el.classList.toggle('active', (i === 0 && tab === 'transacao') || (i === 1 && tab === 'categoria'));
+    });
+    document.getElementById('tab-transacao').classList.toggle('active', tab === 'transacao');
+    document.getElementById('tab-categoria').classList.toggle('active', tab === 'categoria');
+  }
+
+  function fmt(val) {
+    return 'R$ ' + parseFloat(val).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+  }
+
+  async function carregarResumo() {
+    try {
+      const res = await fetch(`${API}/transacoes/resumo`);
+      const data = await res.json();
+      document.getElementById('val-receitas').textContent = fmt(data.receitas);
+      document.getElementById('val-despesas').textContent = fmt(data.despesas);
+      document.getElementById('val-saldo').textContent = fmt(data.saldo);
+    } catch { }
+  }
+
+  async function carregarCategorias() {
+    try {
+      const res = await fetch(`${API}/categorias`);
+      const cats = await res.json();
+      const sel = document.getElementById('t-categoria');
+      sel.innerHTML = '<option value="">Sem categoria</option>';
+      cats.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.nome;
+        sel.appendChild(opt);
+      });
+    } catch { }
+  }
+
+  async function carregarTransacoes() {
+    try {
+      const res = await fetch(`${API}/transacoes`);
+      const list = await res.json();
+      const el = document.getElementById('lista-transacoes');
+      if (!list.length) { el.innerHTML = '<div class="empty">Nenhuma transação ainda.</div>'; return; }
+      el.innerHTML = list.map(t => `
+        <div class="transacao-item">
+          <div class="transacao-info">
+            <div class="transacao-desc">${t.descricao}</div>
+            <div class="transacao-meta">${t.categoria ? t.categoria.nome + ' • ' : ''}${new Date(t.data).toLocaleDateString('pt-BR')}</div>
+          </div>
+          <div class="transacao-valor ${t.tipo}">${t.tipo === 'receita' ? '+' : '-'} ${fmt(t.valor)}</div>
+          <button class="btn-del" onclick="deletarTransacao(${t.id})">✕</button>
+        </div>
+      `).join('');
+    } catch { }
+  }
+
+  async function criarTransacao() {
+    const descricao = document.getElementById('t-desc').value.trim();
+    const valor = document.getElementById('t-valor').value;
+    const tipo = document.getElementById('t-tipo').value;
+    const data = document.getElementById('t-data').value;
+    const categoriaId = document.getElementById('t-categoria').value || null;
+
+    if (!descricao || !valor || !data) { showToast('Preencha todos os campos!', true); return; }
+
+    try {
+      const res = await fetch(`${API}/transacoes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ descricao, valor: parseFloat(valor), tipo, data, categoriaId })
+      });
+      if (!res.ok) throw new Error();
+      document.getElementById('t-desc').value = '';
+      document.getElementById('t-valor').value = '';
+      showToast('Transação registrada!');
+      carregarResumo();
+      carregarTransacoes();
+    } catch { showToast('Erro ao registrar transação.', true); }
+  }
+
+  async function criarCategoria() {
+    const nome = document.getElementById('c-nome').value.trim();
+    const tipo = document.getElementById('c-tipo').value;
+    if (!nome) { showToast('Digite o nome da categoria!', true); return; }
+
+    try {
+      const res = await fetch(`${API}/categorias`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, tipo })
+      });
+      if (!res.ok) throw new Error();
+      document.getElementById('c-nome').value = '';
+      showToast('Categoria criada!');
+      carregarCategorias();
+    } catch { showToast('Erro ao criar categoria.', true); }
+  }
+
+  async function deletarTransacao(id) {
+    try {
+      await fetch(`${API}/transacoes/${id}`, { method: 'DELETE' });
+      showToast('Transação removida.');
+      carregarResumo();
+      carregarTransacoes();
+    } catch { showToast('Erro ao deletar.', true); }
+  }
+
+  // Inicializar
+  carregarResumo();
+  carregarCategorias();
+  carregarTransacoes();
+</script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const sequelize = require('./config/database');
 
 require('./models/Categoria');
@@ -9,6 +10,7 @@ const categoriaRoutes = require('./routes/categoriaRoutes');
 const transacaoRoutes = require('./routes/transacaoRoutes');
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 app.use('/categorias', categoriaRoutes);
